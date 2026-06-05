@@ -10,16 +10,22 @@
 import Cocoa
 import ApplicationServices
 
-// 시스템 언어(영·한·일·중)에 따라 UI 문자열을 고른다.
+// UI 문자열을 언어별로 고른다. 기본은 시스템 언어(영·한·일·중)를 따르되,
+// 설정 창에서 명시적으로 고른 언어가 있으면 그걸 우선한다(UserDefaults "language").
 // swiftc 단일 파일 빌드라 .strings 번들 대신 코드 내 테이블을 쓴다.
 enum L10n {
-    private static let lang: String = {
-        let pref = (Locale.preferredLanguages.first ?? "en").lowercased()
-        if pref.hasPrefix("ko") { return "ko" }
-        if pref.hasPrefix("ja") { return "ja" }
-        if pref.hasPrefix("zh") { return "zh" }
+    static let prefKey = "language"   // "system"(기본)/"ko"/"en"/"ja"/"zh"
+
+    // 설정에서 바꾸면 즉시 반영되도록 매번 계산한다(상수 캐시 X).
+    static var lang: String {
+        let pref = UserDefaults.standard.string(forKey: prefKey) ?? "system"
+        if pref != "system" { return pref }
+        let sys = (Locale.preferredLanguages.first ?? "en").lowercased()
+        if sys.hasPrefix("ko") { return "ko" }
+        if sys.hasPrefix("ja") { return "ja" }
+        if sys.hasPrefix("zh") { return "zh" }
         return "en"
-    }()
+    }
 
     static func t(_ key: String) -> String {
         let entry = table[key]
@@ -93,6 +99,14 @@ enum L10n {
             "ko": "설정 열기",
             "ja": "設定を開く",
             "zh": "打开设置"],
+        "settingsMenu": ["en": "Settings…", "ko": "설정…", "ja": "設定…", "zh": "设置…"],
+        "settingsTitle": [
+            "en": "WinDock Settings", "ko": "WinDock 설정",
+            "ja": "WinDock 設定", "zh": "WinDock 设置"],
+        "language": ["en": "Language", "ko": "언어", "ja": "言語", "zh": "语言"],
+        "languageSystem": [
+            "en": "System default", "ko": "시스템 따름",
+            "ja": "システムに従う", "zh": "跟随系统"],
     ]
 }
 
@@ -101,6 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
 
     private var statusItem: NSStatusItem!
+    private var prefsWindow: NSWindow?
     private var isEnabled: Bool = true
     private var hideOnSwitch: Bool = true   // 앱 전환 시 이전 앱 숨김
     private var hideOnReClick: Bool = true  // 같은 앱 재활성화 시 숨김
@@ -307,35 +322,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let onSwitch = NSMenuItem(title: L10n.t("autoHideSwitch"),
-                                  action: #selector(toggleHideOnSwitch),
-                                  keyEquivalent: "")
-        onSwitch.target = self
-        onSwitch.state = hideOnSwitch ? .on : .off
-        menu.addItem(onSwitch)
-
-        let onReClick = NSMenuItem(title: L10n.t("hideReclick"),
-                                   action: #selector(toggleHideOnReClick),
-                                   keyEquivalent: "")
-        onReClick.target = self
-        onReClick.state = hideOnReClick ? .on : .off
-        menu.addItem(onReClick)
-
-        let minimizeItem = NSMenuItem(title: L10n.t("minimizeMode"),
-                                      action: #selector(toggleUseMinimize),
-                                      keyEquivalent: "")
-        minimizeItem.target = self
-        minimizeItem.state = useMinimize ? .on : .off
-        minimizeItem.toolTip = L10n.t("minimizeTooltip")
-        menu.addItem(minimizeItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let launchAtLogin = NSMenuItem(title: L10n.t("launchAtLoginMenu"),
-                                       action: #selector(showLaunchAtLoginInfo),
-                                       keyEquivalent: "")
-        launchAtLogin.target = self
-        menu.addItem(launchAtLogin)
+        let settings = NSMenuItem(title: L10n.t("settingsMenu"),
+                                  action: #selector(openSettings),
+                                  keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(settings)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -551,29 +542,98 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateStatusIcon()
     }
 
-    @objc private func toggleHideOnSwitch() {
-        hideOnSwitch.toggle()
-        savePreferences()
-        rebuildMenu()
-        updateStatusIcon()
-    }
+    // MARK: - Settings Window
 
-    @objc private func toggleHideOnReClick() {
-        hideOnReClick.toggle()
-        savePreferences()
-        rebuildMenu()
-        updateStatusIcon()
-    }
-
-    @objc private func toggleUseMinimize() {
-        useMinimize.toggle()
-        savePreferences()
-        rebuildMenu()
-        updateStatusIcon()
-        // minimize를 켰는데 시스템 설정이 꺼져 있으면, 켜기를 제안한다.
-        if useMinimize && !isMinimizeToAppEnabled() {
-            promptEnableMinimizeToApp()
+    @objc private func openSettings() {
+        if prefsWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 380, height: 200),
+                             styleMask: [.titled, .closable],
+                             backing: .buffered, defer: false)
+            w.isReleasedWhenClosed = false
+            prefsWindow = w
         }
+        rebuildPrefsContent()
+        prefsWindow?.title = L10n.t("settingsTitle")
+        prefsWindow?.center()
+        NSApp.activate(ignoringOtherApps: true)
+        prefsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    // 설정 창 내용을 매번 새로 그린다 — 언어를 바꾸면 라벨이 즉시 갱신되도록.
+    private func rebuildPrefsContent() {
+        guard let window = prefsWindow else { return }
+        let width: CGFloat = 380, pad: CGFloat = 20, rowH: CGFloat = 24, gap: CGFloat = 14
+        let rows = 5
+        let height = pad * 2 + CGFloat(rows) * rowH + CGFloat(rows - 1) * gap
+        let content = NSView(frame: NSRect(x: 0, y: 0, width: width, height: height))
+
+        func checkbox(_ key: String, tag: Int, on: Bool, tooltip: String? = nil) -> NSButton {
+            let b = NSButton(checkboxWithTitle: L10n.t(key), target: self,
+                             action: #selector(prefCheckboxChanged(_:)))
+            b.tag = tag
+            b.state = on ? .on : .off
+            b.toolTip = tooltip
+            return b
+        }
+
+        var y = height - pad - rowH
+        func addRow(_ v: NSView) {
+            v.frame = NSRect(x: pad, y: y, width: width - pad * 2, height: rowH)
+            content.addSubview(v)
+            y -= rowH + gap
+        }
+
+        addRow(checkbox("autoHideSwitch", tag: 1, on: hideOnSwitch))
+        addRow(checkbox("hideReclick", tag: 2, on: hideOnReClick))
+        addRow(checkbox("minimizeMode", tag: 3, on: useMinimize, tooltip: L10n.t("minimizeTooltip")))
+
+        // 언어: 라벨 + 팝업
+        let langLabel = NSTextField(labelWithString: L10n.t("language"))
+        langLabel.frame = NSRect(x: pad, y: y + 2, width: 70, height: rowH)
+        content.addSubview(langLabel)
+        let popup = NSPopUpButton(frame: NSRect(x: pad + 76, y: y - 2, width: 184, height: rowH + 2),
+                                  pullsDown: false)
+        popup.addItems(withTitles: [L10n.t("languageSystem"), "한국어", "English", "日本語", "中文"])
+        let cur = UserDefaults.standard.string(forKey: L10n.prefKey) ?? "system"
+        popup.selectItem(at: ["system", "ko", "en", "ja", "zh"].firstIndex(of: cur) ?? 0)
+        popup.target = self
+        popup.action = #selector(prefLanguageChanged(_:))
+        content.addSubview(popup)
+        y -= rowH + gap
+
+        // 로그인 시 자동 실행 안내 버튼
+        let loginBtn = NSButton(title: L10n.t("launchAtLoginMenu"), target: self,
+                                action: #selector(showLaunchAtLoginInfo))
+        loginBtn.bezelStyle = .rounded
+        loginBtn.frame = NSRect(x: pad, y: y - 2, width: width - pad * 2, height: rowH + 4)
+        content.addSubview(loginBtn)
+
+        window.contentView = content
+        window.setContentSize(NSSize(width: width, height: height))
+    }
+
+    @objc private func prefCheckboxChanged(_ sender: NSButton) {
+        let on = sender.state == .on
+        switch sender.tag {
+        case 1: hideOnSwitch = on
+        case 2: hideOnReClick = on
+        case 3:
+            useMinimize = on
+            // minimize를 켰는데 시스템 설정이 꺼져 있으면, 켜기를 제안한다.
+            if useMinimize && !isMinimizeToAppEnabled() {
+                promptEnableMinimizeToApp()
+            }
+        default: break
+        }
+        savePreferences()
+    }
+
+    @objc private func prefLanguageChanged(_ sender: NSPopUpButton) {
+        let codes = ["system", "ko", "en", "ja", "zh"]
+        let idx = max(0, min(sender.indexOfSelectedItem, codes.count - 1))
+        UserDefaults.standard.set(codes[idx], forKey: L10n.prefKey)
+        rebuildMenu()          // 메뉴 라벨 갱신
+        rebuildPrefsContent()  // 창 라벨 즉시 갱신
     }
 
     // macOS '윈도우를 응용 프로그램 아이콘으로 최소화' 설정 여부.
