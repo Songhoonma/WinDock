@@ -1,0 +1,24 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Compile (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile with swiftc
+        run: |
+          swiftc -O -target x86_64-apple-macos13.0 -framework Cocoa \
+            -o /tmp/WinDock AppDelegate.swift main.swift
+
+      - name: Verify binary
+        run: |
+          file /tmp/WinDock
+          test -x /tmp/WinDock && echo "✅ Build succeeded"

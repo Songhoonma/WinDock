@@ -1,0 +1,16 @@
+# 빌드 산출물
+build/
+*.zip
+
+# macOS
+.DS_Store
+
+# 런타임 로그 (디버그용, /tmp에 생성)
+*.log
+
+# Xcode 부산물 (혹시 IDE에서 열 경우)
+*.xcuserstate
+xcuserdata/
+
+# Claude Code 로컬 설정·메모리 (공개 금지)
+.claude/

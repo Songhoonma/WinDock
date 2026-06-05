@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- hide() fallback이 다른 앱에 Apple Event를 보낼 수 있어 Hardened Runtime에서 허용.
+         주력 숨김 경로는 Accessibility(AX)이며 그건 TCC 권한이라 entitlement가 필요 없다. -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+</dict>
+</plist>
