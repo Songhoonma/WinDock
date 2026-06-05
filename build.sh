@@ -44,8 +44,10 @@ swiftc \
     -o "$EXEC" \
     AppDelegate.swift main.swift
 
-echo "[2/5] Bundling Info.plist..."
+echo "[2/5] Bundling Info.plist + app icon..."
 cp Info.plist "$APP_BUNDLE/Contents/Info.plist"
+mkdir -p "$APP_BUNDLE/Contents/Resources"
+cp assets/WinDock.icns "$APP_BUNDLE/Contents/Resources/WinDock.icns"
 
 if [ "$SIGN_IDENTITY" = "-" ]; then
     echo "[3/5] Codesigning (ad-hoc — 로컬 개발용, 배포 불가)..."

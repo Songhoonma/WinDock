@@ -6,6 +6,8 @@
     <string>ko_KR</string>
     <key>CFBundleExecutable</key>
     <string>WinDock</string>
+    <key>CFBundleIconFile</key>
+    <string>WinDock</string>
     <key>CFBundleIdentifier</key>
     <string>kr.l2mgroup.WinDock</string>
     <key>CFBundleInfoDictionaryVersion</key>
