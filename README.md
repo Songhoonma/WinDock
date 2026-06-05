@@ -39,7 +39,8 @@ If you've ever clicked a Dock icon expecting the window to disappear — and not
   - **Hide** (default) — clean and instant; always restores reliably.
   - **Minimize** — windows slide into the Dock, Windows-taskbar style. *(Best with macOS "Minimize windows into application icon" enabled — WinDock offers to turn it on for you.)*
 - **Single-app focus** *(optional)* — automatically hide the previous app when you switch, so only one app is on screen at a time. Multi-monitor aware: apps on other displays are left alone.
-- **Multilingual** — UI in English, Korean, Japanese, and Chinese, auto-selected by your system language.
+- **Multilingual** — UI in English, Korean, Japanese, and Chinese — auto-selected by your system language, or pick one manually in Settings.
+- **Automatic updates** — a built-in Sparkle updater keeps WinDock current; check anytime from the menu.
 - **Lightweight** — a menu-bar-only app. No dock icon, no background bloat.
 
 ## Install
@@ -53,14 +54,18 @@ If you've ever clicked a Dock icon expecting the window to disappear — and not
 
 To launch at login: System Settings → General → **Login Items** → add WinDock.
 
-## Settings (menu-bar icon)
+## Settings
 
-Click the menu-bar icon to configure:
+The menu-bar icon keeps the essentials — **Enable / Disable**, **Settings…**, **Check for Updates…**, and **Quit** — and **Settings…** opens a window where you can change everything at once:
 
-- **Enable / Disable** — master switch.
+<p align="center">
+  <img src="assets/screenshot-settings.png" width="380" alt="WinDock Settings window">
+</p>
+
 - **Auto-hide previous app on switch** — single-app focus mode.
 - **Hide on re-click of same app** — the core Windows-taskbar behavior.
 - **Hide method: Minimize** — switch between Hide (⌘H style) and Minimize (into the Dock).
+- **Language** — System default, English, 한국어, 日本語, or 中文.
 
 ## How it works
 
