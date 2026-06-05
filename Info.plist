@@ -19,9 +19,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>2</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>
@@ -35,6 +35,13 @@
     <key>NSSupportsAutomaticTermination</key>
     <false/>
     <key>NSSupportsSuddenTermination</key>
+    <true/>
+    <!-- Sparkle 자동 업데이트 -->
+    <key>SUFeedURL</key>
+    <string>https://songhoonma.github.io/WinDock/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>o4aDxLB+409QNmksRd3kP6ELWseTeIom9PocBpd+i/g=</string>
+    <key>SUEnableAutomaticChecks</key>
     <true/>
 </dict>
 </plist>

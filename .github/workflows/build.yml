@@ -16,6 +16,8 @@ jobs:
       - name: Compile with swiftc
         run: |
           swiftc -O -target x86_64-apple-macos13.0 -framework Cocoa \
+            -F Frameworks -framework Sparkle \
+            -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
             -o /tmp/WinDock AppDelegate.swift main.swift
 
       - name: Verify binary

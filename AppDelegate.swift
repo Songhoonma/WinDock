@@ -9,6 +9,7 @@
 
 import Cocoa
 import ApplicationServices
+import Sparkle
 
 // UI 문자열을 언어별로 고른다. 기본은 시스템 언어(영·한·일·중)를 따르되,
 // 설정 창에서 명시적으로 고른 언어가 있으면 그걸 우선한다(UserDefaults "language").
@@ -100,6 +101,9 @@ enum L10n {
             "ja": "設定を開く",
             "zh": "打开设置"],
         "settingsMenu": ["en": "Settings…", "ko": "설정…", "ja": "設定…", "zh": "设置…"],
+        "checkUpdates": [
+            "en": "Check for Updates…", "ko": "업데이트 확인…",
+            "ja": "アップデートを確認…", "zh": "检查更新…"],
         "settingsTitle": [
             "en": "WinDock Settings", "ko": "WinDock 설정",
             "ja": "WinDock 設定", "zh": "WinDock 设置"],
@@ -116,6 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private var prefsWindow: NSWindow?
+    private var updaterController: SPUStandardUpdaterController!
     private var isEnabled: Bool = true
     private var hideOnSwitch: Bool = true   // 앱 전환 시 이전 앱 숨김
     private var hideOnReClick: Bool = true  // 같은 앱 재활성화 시 숨김
@@ -140,6 +145,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 메뉴바 전용 앱 (Dock 아이콘 숨김)
         NSApp.setActivationPolicy(.accessory)
+
+        // Sparkle 자동 업데이트 — appcast(SUFeedURL)를 주기적으로 확인.
+        updaterController = SPUStandardUpdaterController(startingUpdater: true,
+                                                        updaterDelegate: nil,
+                                                        userDriverDelegate: nil)
 
         setupStatusItem()
         loadPreferences()
@@ -327,6 +337,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                   keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
+
+        let updates = NSMenuItem(title: L10n.t("checkUpdates"),
+                                 action: #selector(checkForUpdates),
+                                 keyEquivalent: "")
+        updates.target = self
+        menu.addItem(updates)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -676,6 +692,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.informativeText = L10n.t("launchInfoBody")
         alert.addButton(withTitle: L10n.t("ok"))
         alert.runModal()
+    }
+
+    @objc private func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
     }
 
     @objc private func quitApp() {

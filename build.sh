@@ -19,6 +19,7 @@ APP_NAME="WinDock"
 BUILD_DIR="build"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
+FRAMEWORKS_DIR="$APP_BUNDLE/Contents/Frameworks"
 EXEC="$MACOS_DIR/$APP_NAME"
 ENTITLEMENTS="entitlements.plist"
 
@@ -35,12 +36,18 @@ echo "── Building WinDock v$VERSION ──"
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$MACOS_DIR"
+mkdir -p "$FRAMEWORKS_DIR"
+
+# Sparkle 자동 업데이트 프레임워크를 번들에 임베드 (repo에 벤더링됨).
+cp -R Frameworks/Sparkle.framework "$FRAMEWORKS_DIR/Sparkle.framework"
 
 echo "[1/5] Compiling Swift..."
 swiftc \
     -O \
     -target x86_64-apple-macos13.0 \
     -framework Cocoa \
+    -F "$FRAMEWORKS_DIR" -framework Sparkle \
+    -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
     -o "$EXEC" \
     AppDelegate.swift main.swift
 
@@ -49,16 +56,25 @@ cp Info.plist "$APP_BUNDLE/Contents/Info.plist"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 cp assets/WinDock.icns "$APP_BUNDLE/Contents/Resources/WinDock.icns"
 
+# 서명 인자: ad-hoc은 timestamp 불가, Developer ID는 secure timestamp 필수(공증 요건).
+SIGN_ARGS=(--force --options runtime --sign "$SIGN_IDENTITY")
+if [ "$SIGN_IDENTITY" != "-" ]; then SIGN_ARGS+=(--timestamp); fi
+
 if [ "$SIGN_IDENTITY" = "-" ]; then
     echo "[3/5] Codesigning (ad-hoc — 로컬 개발용, 배포 불가)..."
-    codesign --force --options runtime --entitlements "$ENTITLEMENTS" --sign "-" "$APP_BUNDLE"
 else
     echo "[3/5] Codesigning (Developer ID + Hardened Runtime)..."
-    codesign --force --options runtime --timestamp \
-        --entitlements "$ENTITLEMENTS" \
-        --sign "$SIGN_IDENTITY" \
-        "$APP_BUNDLE"
 fi
+# Sparkle 프리빌트 구성요소는 adhoc 서명이라 inside-out으로 재서명해야 한다
+# (공증은 adhoc/팀ID 없는 실행 파일을 거부). 깊은 곳부터 → 프레임워크 → 앱 순.
+FW="$FRAMEWORKS_DIR/Sparkle.framework/Versions/B"
+codesign "${SIGN_ARGS[@]}" "$FW/XPCServices/Installer.xpc"
+codesign "${SIGN_ARGS[@]}" "$FW/XPCServices/Downloader.xpc"
+codesign "${SIGN_ARGS[@]}" "$FW/Autoupdate"
+codesign "${SIGN_ARGS[@]}" "$FW/Updater.app"
+codesign "${SIGN_ARGS[@]}" "$FRAMEWORKS_DIR/Sparkle.framework"
+# 메인 앱 (entitlements 포함) — 반드시 마지막
+codesign "${SIGN_ARGS[@]}" --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
 codesign --verify --strict --verbose=2 "$APP_BUNDLE"
 
 # 공증: Developer ID 서명이고 자격증명 프로파일이 있을 때만
