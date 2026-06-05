@@ -29,6 +29,10 @@ NOTARY_PROFILE="${NOTARY_PROFILE:-WinDock-notary}"
 
 cd "$(dirname "$0")"
 
+# 버전 SOT는 Info.plist (RELEASING.md 참고)
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Info.plist 2>/dev/null || echo '?')"
+echo "── Building WinDock v$VERSION ──"
+
 rm -rf "$BUILD_DIR"
 mkdir -p "$MACOS_DIR"
 
