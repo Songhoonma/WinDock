@@ -553,7 +553,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             prefsWindow = w
         }
         rebuildPrefsContent()
-        prefsWindow?.title = L10n.t("settingsTitle")
         prefsWindow?.center()
         NSApp.activate(ignoringOtherApps: true)
         prefsWindow?.makeKeyAndOrderFront(nil)
@@ -608,6 +607,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         loginBtn.frame = NSRect(x: pad, y: y - 2, width: width - pad * 2, height: rowH + 4)
         content.addSubview(loginBtn)
 
+        window.title = L10n.t("settingsTitle")
         window.contentView = content
         window.setContentSize(NSSize(width: width, height: height))
     }

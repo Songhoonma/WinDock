@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Settings window title bar now updates immediately when the language is switched (previously it kept whichever language was active when the window was first opened, so the title and body could disagree).
+
 ## [1.0.0] - 2026-06-06
 
 ### Added
