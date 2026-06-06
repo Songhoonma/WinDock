@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>WinDock</title>
+        <item>
+            <title>1.1.0</title>
+            <pubDate>Sat, 06 Jun 2026 09:41:53 +0900</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/Songhoonma/WinDock/releases/download/v1.1.0/WinDock.zip" length="1552489" type="application/octet-stream" sparkle:edSignature="wSVlah76q7/5CiIJMjAv8Hcduz3mt36RarSXI8NPosPCAR4PtQ4sEQdhjdXGnpVy9VbUJj5Vz4AT0QzRRQLADw=="/>
+        </item>
+    </channel>
+</rss>
