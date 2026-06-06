@@ -80,6 +80,32 @@ No private APIs, no screen recording, no network access.
 
 WinDock requires **Accessibility** permission only. It does not collect, transmit, or store any personal data. A debug log is written to `/tmp/windock.log` (auto-trimmed) and never leaves your machine.
 
+## FAQ
+
+**Nothing happens when I click a Dock icon.**
+WinDock needs **Accessibility** permission. Open System Settings → Privacy & Security → **Accessibility** and make sure WinDock is enabled. After updating the app you may need to toggle it off and on again.
+
+**My minimized windows pile up on the right side of the Dock instead of into the app icon.**
+That's a macOS setting. Turn on **System Settings → Desktop & Dock → "Minimize windows into application icon."** WinDock offers to enable this for you when you switch to Minimize mode.
+
+**What's the difference between Hide and Minimize?**
+*Hide* (⌘H style) tucks the whole app away instantly and always restores reliably. *Minimize* slides each window into the Dock, like the Windows taskbar. Pick whichever feels right in Settings.
+
+**Does it work with multiple monitors?**
+Yes. Auto-hide-on-switch is screen-aware — apps on other displays are left alone.
+
+**How do I launch it at login?**
+System Settings → General → **Login Items** → add WinDock.
+
+**How do updates work?**
+WinDock updates itself via Sparkle. You can also check manually from the menu bar → **Check for Updates…**
+
+**Is it safe?**
+WinDock is open source, notarized by Apple under Developer ID, and uses only the Accessibility API. No screen recording, no network access beyond checking for updates, no data collection.
+
+**Found a bug or have a request?**
+Please [open an issue](../../issues) — that's the best place, and it's checked when time allows. This is a free, open-source side project, so support is best-effort.
+
 ## Contributing
 
 Contributions are welcome — bug fixes, features, translations, docs.
