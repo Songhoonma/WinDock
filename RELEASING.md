@@ -27,9 +27,24 @@ The **single source of truth** for the version is `CFBundleShortVersionString` i
    gh release create vX.Y.Z build/WinDock.zip \
      --title "WinDock vX.Y.Z" --notes-file <release-notes.md>
    ```
+7. **Update the Sparkle appcast** (this is what triggers auto-updates for existing users):
+   ```bash
+   # Sign the release zip and (re)generate the appcast. Keep prior versions'
+   # zips in the folder so the appcast stays cumulative, OR re-run per release
+   # and merge entries into docs/appcast.xml by hand.
+   generate_appcast \
+     --download-url-prefix "https://github.com/Songhoonma/WinDock/releases/download/vX.Y.Z/" \
+     <folder-containing-WinDock.zip>
+   cp <folder>/appcast.xml docs/appcast.xml
+   git commit -am "Publish Sparkle appcast for vX.Y.Z" && git push origin main
+   ```
+   - `docs/appcast.xml` is served via **GitHub Pages** at `https://songhoonma.github.io/WinDock/appcast.xml`, which is the `SUFeedURL` baked into `Info.plist`.
+   - `generate_appcast` signs with the **EdDSA private key in the login keychain** (created once via Sparkle's `generate_keys`; public key is `SUPublicEDKey` in `Info.plist`).
+   - Verify: `curl -sI https://songhoonma.github.io/WinDock/appcast.xml` → 200, and the enclosure URL resolves.
 
 ## Notes
 
 - **CI** (GitHub Actions) compiles every push and PR, but does **not** sign, notarize, or release — those are maintainer-only steps requiring the Developer ID certificate.
 - Contributors never need signing/notarization; they build locally with `WINDOCK_SIGN="-" ./build.sh`.
 - Keep `## [Unreleased]` at the top of `CHANGELOG.md` for the next cycle.
+- **Back up the Sparkle EdDSA private key.** It lives in the maintainer's login keychain. If it is lost, no future build can be signed for auto-update and every user has to reinstall manually. Export/store it securely (never commit it).
